@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Heart, Instagram, Twitter, Facebook, Youtube } from "lucide-react";
+import KinboostLogo from "./KinboostLogo";
 
 const footerLinks = {
   product: [
@@ -45,13 +46,8 @@ const Footer = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-12 mb-12">
           {/* Brand column */}
           <div className="lg:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-                <span className="text-primary-foreground font-display font-bold text-xl">
-                  K
-                </span>
-              </div>
-              <span className="font-display text-xl font-bold">KinMarket</span>
+            <div className="mb-4">
+              <KinboostLogo size="md" />
             </div>
             <p className="text-background/70 font-body text-sm mb-6 max-w-xs">
               La plateforme de vente de produits numériques créée pour les entrepreneurs de Kinshasa et d'Afrique.
@@ -143,7 +139,7 @@ const Footer = () => {
         {/* Bottom bar */}
         <div className="border-t border-background/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-background/50 text-sm font-body">
-            © 2026 KinMarket. Tous droits réservés.
+            © 2026 KINBOOST. Tous droits réservés.
           </p>
           <p className="text-background/50 text-sm font-body flex items-center gap-1">
             Fait avec <Heart className="w-4 h-4 text-primary" /> à Kinshasa

@@ -86,7 +86,7 @@ const Hero = ({ onOpenSignup }: HeroProps) => {
           >
             <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
             <span className="text-sm font-medium text-muted-foreground">
-              La plateforme #1 pour les créateurs congolais
+              KINBOOST — La plateforme #1 pour les créateurs congolais
             </span>
           </motion.div>
 
