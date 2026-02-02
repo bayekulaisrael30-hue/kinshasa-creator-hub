@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import KinboostLogo from "./KinboostLogo";
 
 interface NavbarProps {
   onOpenSignup: () => void;
@@ -40,15 +41,8 @@ const Navbar = ({ onOpenSignup }: NavbarProps) => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-              <span className="text-primary-foreground font-display font-bold text-xl">
-                K
-              </span>
-            </div>
-            <span className="font-display text-xl font-bold text-foreground">
-              KinMarket
-            </span>
+          <a href="/" className="flex items-center">
+            <KinboostLogo size="md" />
           </a>
 
           {/* Desktop Navigation */}
