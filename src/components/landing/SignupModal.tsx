@@ -1,21 +1,23 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mail, ArrowRight, Check, Store, Sparkles } from "lucide-react";
+import { X, Mail, ArrowRight, Check, Store, Sparkles, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SignupModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type Step = "email" | "verification" | "storename" | "success";
+type Step = "email" | "verification" | "storename" | "password" | "success";
 
 const SignupModal = ({ isOpen, onClose }: SignupModalProps) => {
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [storeName, setStoreName] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -29,10 +31,25 @@ const SignupModal = ({ isOpen, onClose }: SignupModalProps) => {
     }
     
     setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("send-otp", {
+        body: { email },
+      });
+
+      if (fnError || data?.error) {
+        setError(data?.error || "Erreur lors de l'envoi du code");
+        setIsLoading(false);
+        return;
+      }
+
+      setStep("verification");
+    } catch (err) {
+      console.error("Error sending OTP:", err);
+      setError("Erreur de connexion");
+    }
+    
     setIsLoading(false);
-    setStep("verification");
   };
 
   const handleVerificationSubmit = async (e: React.FormEvent) => {
@@ -45,9 +62,25 @@ const SignupModal = ({ isOpen, onClose }: SignupModalProps) => {
     }
     
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("verify-otp", {
+        body: { email, code: verificationCode },
+      });
+
+      if (fnError || data?.error) {
+        setError(data?.error || "Code invalide");
+        setIsLoading(false);
+        return;
+      }
+
+      setStep("storename");
+    } catch (err) {
+      console.error("Error verifying OTP:", err);
+      setError("Erreur de connexion");
+    }
+    
     setIsLoading(false);
-    setStep("storename");
   };
 
   const handleStoreNameSubmit = async (e: React.FormEvent) => {
@@ -59,10 +92,48 @@ const SignupModal = ({ isOpen, onClose }: SignupModalProps) => {
       return;
     }
     
+    setStep("password");
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    
+    if (password.length < 6) {
+      setError("Le mot de passe doit contenir au moins 6 caractères");
+      return;
+    }
+    
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("create-account", {
+        body: { email, storeName, password },
+      });
+
+      if (fnError || data?.error) {
+        setError(data?.error || "Erreur lors de la création du compte");
+        setIsLoading(false);
+        return;
+      }
+
+      // Sign in the user
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        console.error("Sign in error:", signInError);
+      }
+
+      setStep("success");
+    } catch (err) {
+      console.error("Error creating account:", err);
+      setError("Erreur de connexion");
+    }
+    
     setIsLoading(false);
-    setStep("success");
   };
 
   const resetModal = () => {
@@ -70,6 +141,7 @@ const SignupModal = ({ isOpen, onClose }: SignupModalProps) => {
     setEmail("");
     setVerificationCode("");
     setStoreName("");
+    setPassword("");
     setError("");
     onClose();
   };
@@ -134,11 +206,11 @@ const SignupModal = ({ isOpen, onClose }: SignupModalProps) => {
             {/* Progress indicator */}
             <div className="px-8 pt-8">
               <div className="flex gap-2 mb-8">
-                {["email", "verification", "storename", "success"].map((s, i) => (
+                {["email", "verification", "storename", "password", "success"].map((s, i) => (
                   <div
                     key={s}
                     className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-                      ["email", "verification", "storename", "success"].indexOf(step) >= i
+                      ["email", "verification", "storename", "password", "success"].indexOf(step) >= i
                         ? "bg-primary"
                         : "bg-muted"
                     }`}
@@ -313,13 +385,65 @@ const SignupModal = ({ isOpen, onClose }: SignupModalProps) => {
                         className="w-full"
                         disabled={isLoading}
                       >
+                        Continuer
+                        <ArrowRight className="w-5 h-5" />
+                      </Button>
+                    </form>
+                  </motion.div>
+                )}
+
+                {/* Step 4: Password */}
+                {step === "password" && (
+                  <motion.div
+                    key="password"
+                    variants={stepVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                  >
+                    <div className="mb-6">
+                      <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
+                        <Lock className="w-7 h-7 text-primary" />
+                      </div>
+                      <h3 className="font-display text-2xl font-bold text-foreground mb-2">
+                        Créez votre mot de passe
+                      </h3>
+                      <p className="text-muted-foreground font-body">
+                        Sécurisez votre compte avec un mot de passe
+                      </p>
+                    </div>
+
+                    <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                      <div>
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="h-12 rounded-xl"
+                          autoFocus
+                        />
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Minimum 6 caractères
+                        </p>
+                        {error && (
+                          <p className="text-sm text-destructive mt-2">{error}</p>
+                        )}
+                      </div>
+                      <Button
+                        type="submit"
+                        variant="hero"
+                        size="lg"
+                        className="w-full"
+                        disabled={isLoading}
+                      >
                         {isLoading ? "Création..." : "Créer ma boutique"}
                       </Button>
                     </form>
                   </motion.div>
                 )}
 
-                {/* Step 4: Success */}
+                {/* Step 5: Success */}
                 {step === "success" && (
                   <motion.div
                     key="success"
