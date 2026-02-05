@@ -78,14 +78,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email via Resend
     const { error: emailError } = await resend.emails.send({
-      from: "Kinmarket <onboarding@resend.dev>",
+      from: "Kinboost <noreply@kinboost.shop>",
       to: [email],
-      subject: "Votre code de vérification Kinmarket",
+      subject: "Votre code de vérification Kinboost",
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
           <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Vérification de votre email</h1>
           <p style="color: #666; font-size: 16px; line-height: 1.5; margin-bottom: 24px;">
-            Voici votre code de vérification pour créer votre boutique Kinmarket :
+          Voici votre code de vérification pour créer votre boutique Kinboost :
           </p>
           <div style="background: #f4f4f4; border-radius: 8px; padding: 24px; text-align: center; margin-bottom: 24px;">
             <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1a1a1a;">${otp}</span>
