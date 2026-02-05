@@ -9,8 +9,8 @@ const corsHeaders = {
 
 interface CreateAccountRequest {
   email: string;
-  storeName: string;
   password: string;
+  storeName?: string; // Optional now - will be set later on /create-shop
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -21,19 +21,12 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, storeName, password }: CreateAccountRequest = await req.json();
-    console.log("Creating account for:", email, "with store:", storeName);
+    const { email, password, storeName }: CreateAccountRequest = await req.json();
+    console.log("Creating account for:", email);
 
-    if (!email || !storeName || !password) {
+    if (!email || !password) {
       return new Response(
-        JSON.stringify({ error: "Tous les champs sont requis" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    if (storeName.length < 3) {
-      return new Response(
-        JSON.stringify({ error: "Le nom de boutique doit contenir au moins 3 caractères" }),
+        JSON.stringify({ error: "Email et mot de passe requis" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -80,22 +73,19 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Create profile with store name
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .insert({
-        user_id: authData.user.id,
-        store_name: storeName,
-      });
+    // Only create profile if storeName is provided (legacy support)
+    if (storeName && storeName.length >= 3) {
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .insert({
+          user_id: authData.user.id,
+          store_name: storeName,
+        });
 
-    if (profileError) {
-      console.error("Error creating profile:", profileError);
-      // User created but profile failed - try to clean up
-      await supabase.auth.admin.deleteUser(authData.user.id);
-      return new Response(
-        JSON.stringify({ error: "Erreur lors de la création du profil" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      if (profileError) {
+        console.error("Error creating profile:", profileError);
+        // Don't fail account creation if profile fails - user can set store name later
+      }
     }
 
     console.log("Account created successfully for:", email);
